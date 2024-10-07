@@ -53,7 +53,6 @@ class RequestContext
 
             $database = new QueryBuilder();
 
-
             $userContext = new UserRequestContext('448ef4f1-56e1-48be-838c-d147b5f09705', '112c33ae-3dbe-431b-994d-fffffe6fd49b');
 
             $repositories = new RepositoriesFactory($database, $dataLoaderPromiseAdapter);

@@ -19,10 +19,19 @@ class UnitTypeQuery
                 'args' => [
                     'id' => new NonNull(Types::string()),
                 ],
-                'resolve' => static fn ($rootValue, $args, RequestContext $context)
-                => $context->useCases->unitType
-                    ->unitTypeById
-                    ->handle($args['id'], $context)
+                'resolve' => static function ($rootValue, $args, RequestContext $context) {
+                    try {
+                        return $context->useCases->unitType
+                            ->unitTypeById
+                            ->handle($args['id'], $context);
+                    } catch (\Throwable $e) {
+                        $context->logger->error('Error fetching unit type by id', [
+                            'error' => $e,
+                            'id' => $args['id'],
+                        ]);
+                        throw $e;
+                    }
+                }
             ],
             'unitTypes' => [
                 'type' => new NonNull(new ListOfType(Types::get(UnitType::class))),
