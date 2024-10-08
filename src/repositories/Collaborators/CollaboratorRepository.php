@@ -34,7 +34,7 @@ class CollaboratorRepository extends BaseRepository
 
   private function fetchByIds(string $tenantId, array $ids, int $page = 0) : Promise
   {
-    return async(function () use ($tenantId, $ids) {
+    return async(function () use ($tenantId, $ids, $page) {
       $query = $this->getQueryBuilder()
         ->where(function ($query) use ($tenantId) {
           $query->where([CollaboratorModel::getTenantColumnName() => $tenantId])
