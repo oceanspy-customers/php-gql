@@ -93,3 +93,7 @@ override.tf.json
 terraform.rc
 credentials.json
 *.creds.json
+
+# Ignore .env files
+.env_php
+.env_mysql
