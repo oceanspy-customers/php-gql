@@ -24,46 +24,18 @@ class CollaboratorRepository extends BaseRepository
       private QueryBuilder $database,
       PromiseAdapterInterface $dataLoaderPromiseAdapter
   ) {
-      parent::__construct($database, CollaboratorModel::getTableName());
+      parent::__construct($database, CollaboratorModel::class);
       $this->dataLoaderPromiseAdapter = $dataLoaderPromiseAdapter;
       $this->getbyIdsDL = [];
   }
 
-  public function findMany(string $tenantId)
-  {
-    return async(
-      fn () => $this->getQueryBuilder()
-        ->whereNull('deleted_at')
-        ->where(function ($query) use ($tenantId) {
-          $query->where(CollaboratorModel::getTenantColumnName(), '=', $tenantId)
-            ->orWhereNull(CollaboratorModel::getTenantColumnName());
-        })
-        ->get()
-        ->map(function ($row) {
-          return CollaboratorMapper::modelToEntity(CollaboratorModel::fromStdclass($row));
-        })
-    )();
-  }
-
-  // TODO: Put it in BaseRepository
-
-  public function getByIds(array $ids, string $tenantId): Promise
-  {
-    return $this->getDataloader($tenantId)->loadMany($ids);
-  }
-
-  public function getById(string $id, string $tenantId): Promise
-  {
-    return $this->getDataloader($tenantId)->load($id);
-  }
-
-  private function fetchByIds(string $tenantId, array $ids)
+  private function fetchByIds(string $tenantId, array $ids) : Promise
   {
     return async(function () use ($tenantId, $ids) {
       $query = $this->getQueryBuilder()
         ->where(function ($query) use ($tenantId) {
           $query->where([CollaboratorModel::getTenantColumnName() => $tenantId])
-            ->orWhere(CollaboratorModel::getTenantColumnName(), null);
+            ->orWhere(CollaboratorModel::getTenantColumnName(), null); // tenant_id must be set, so why return null as well ? Except if null = for all <> keeping the same behavior
         });
       $query->whereNull('deleted_at');
       $query->whereIn(CollaboratorModel::getPkColumnName(), $ids);
@@ -80,6 +52,16 @@ class CollaboratorRepository extends BaseRepository
     })();
   }
 
+  public function getByIds(array $ids, string $tenantId): Promise
+  {
+    return $this->getDataloader($tenantId)->loadMany($ids);
+  }
+
+  public function getById(string $id, string $tenantId): Promise
+  {
+    return $this->getDataloader($tenantId)->load($id);
+  }
+
   protected function getDataloader(string $tenantId): DataLoader
   {
     if (!isset($this->getbyIdsDL[$tenantId])) {
@@ -93,4 +75,16 @@ class CollaboratorRepository extends BaseRepository
     return $this->getbyIdsDL[$tenantId];
   }
 
+  public function findMany(string $tenantId): Promise
+  {
+    return async(
+      fn () => $this->getQueryBuilder()
+        ->whereNull('deleted_at')
+        ->where(CollaboratorModel::getTenantColumnName(), '=', $tenantId)
+        ->get()
+        ->map(function ($row) {
+          return CollaboratorMapper::modelToEntity(CollaboratorModel::fromStdclass($row));
+        })
+    )();
+  }
 }

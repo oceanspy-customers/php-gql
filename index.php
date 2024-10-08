@@ -38,8 +38,8 @@ try {
     $socket = new React\Socket\SocketServer('0.0.0.0:' . $_ENV['PORT']);
     $http->listen($socket);
 
-    ApplicationLogger::getInstance()->info("Server running on port " . $_ENV['PORT'] . PHP_EOL, new LogContext(null, null));
+    ApplicationLogger::getInstance()->info("Server running on port " . $_ENV['PORT'] . PHP_EOL, new LogContext(null));
 } catch (Throwable $e) {
-    ApplicationLogger::getInstance()->error($e, 'UNKNOWN_ERROR', new LogContext(null, null));
+    ApplicationLogger::getInstance()->error($e, 'UNKNOWN_ERROR', new LogContext(null));
     exit(0);
 }

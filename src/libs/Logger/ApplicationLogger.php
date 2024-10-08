@@ -53,10 +53,10 @@ class ApplicationLogger
       return $computedContext;
     }
 
-    if ($logContext->getTenantId() !== null) {
+    if (strlen($logContext->getTenantId()) > 0) {
       $computedContext['tenantId'] = $logContext->getTenantId();
     }
-    if ($logContext->getUserId() !== null) {
+    if (strlen($logContext->getUserId()) > 0) {
       $computedContext['userId'] = $logContext->getUserId();
     }
     return $computedContext;

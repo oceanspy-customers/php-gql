@@ -16,7 +16,7 @@ final class Query extends ObjectType
         return [
           'hello' => [
             'type' => Types::string(),
-            'resolve' => function ($root, $args) {
+            'resolve' => function () {
               return 'world';
             }
           ],

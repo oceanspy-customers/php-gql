@@ -3,13 +3,16 @@
 namespace Vertuoza\Repositories\Settings\UnitTypes\Models;
 
 use stdClass;
+use Vertuoza\Repositories\Interfaces\MapperInterface;
+use Vertuoza\Repositories\Interfaces\ModelInterface;
+use Vertuoza\Repositories\Interfaces\MutationDataInterface;
 use Vertuoza\Repositories\Settings\UnitTypes\Models\UnitTypeModel;
 use Vertuoza\Repositories\Settings\UnitTypes\UnitTypeMutationData;
 use Vertuoza\Entities\Settings\UnitTypeEntity;
 
-class UnitTypeMapper
+class UnitTypeMapper implements MapperInterface
 {
-  public static function modelToEntity(UnitTypeModel $dbData): UnitTypeEntity
+  public static function modelToEntity(ModelInterface $dbData): UnitTypeEntity
   {
     $entity = new UnitTypeEntity();
     $entity->id = $dbData->id . '';
@@ -19,17 +22,17 @@ class UnitTypeMapper
     return $entity;
   }
 
-  public static function serializeUpdate(UnitTypeMutationData $mutation): array
+  public static function serializeUpdate(MutationDataInterface $mutation): array
   {
     return self::serializeMutation($mutation);
   }
 
-  public static function serializeCreate(UnitTypeMutationData $mutation, string $tenantId): array
+  public static function serializeCreate(MutationDataInterface $mutation, string $tenantId): array
   {
     return self::serializeMutation($mutation, $tenantId);
   }
 
-  private static function serializeMutation(UnitTypeMutationData $mutation, string $tenantId = null): array
+  private static function serializeMutation(MutationDataInterface $mutation, string $tenantId = null): array
   {
     $data = [
       'label' => $mutation->name,

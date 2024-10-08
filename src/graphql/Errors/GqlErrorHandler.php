@@ -40,7 +40,7 @@ class GqlErrorHandler
           $args = $previous->getArgs() ?? [];
         }
 
-        $logContext = new LogContext($userContext?->getTenantId(), $userContext?->getUserId());
+        $logContext = new LogContext($userContext);
         ApplicationLogger::getInstance()->error($message, $errorCode, $logContext, $args, $statusCode);
 
         if ($previous instanceof UnauthorizedTenantException) {

@@ -53,11 +53,12 @@ class GqlMiddlewares
     static function schema(\GraphQL\Executor\Promise\PromiseAdapter $graphQLPromiseAdapter, PromiseAdapterInterface $dataLoaderPromiseAdapter)
     {
         $query = new Query();
-        // $mutation = new Mutation();
+        $mutation = new Mutation();
 
         $schema = new Schema((
                 new SchemaConfig())
                 ->setQuery($query)
+                ->setMutation($mutation)
                 ->setTypeLoader([Types::class, 'byTypename'])
         );
 
@@ -67,7 +68,7 @@ class GqlMiddlewares
                 $config->setSchema($schema)
                     ->setErrorsHandler(function (array $errors, ?callable $formatter) use ($request) {
                         $context = $request->getAttribute('app-context');
-                        ApplicationLogger::getInstance()->info('Log for bodyx with error', new LogContext(null, null), $errors);
+                        ApplicationLogger::getInstance()->info('Log for bodyx with error', new LogContext(null), $errors);
                         return GqlErrorHandler::handle($errors, $formatter, $context->userContext);
                     });
 
@@ -85,7 +86,7 @@ class GqlMiddlewares
                 $promise = GraphQL::promiseToExecute($graphQLPromiseAdapter, $schema, $query, $rootValue, $request->getAttribute('app-context'), $variableValues);
                 $promise->then(function (ExecutionResult $result) use ($config) {
                     if (!empty($result->errors)) {
-                        ApplicationLogger::getInstance()->info('Log for bodyx with error', new LogContext(null, null), $result->errors);
+                        ApplicationLogger::getInstance()->info('Log for bodyx with error', new LogContext(null), $result->errors);
                         $result->errors = $config->getErrorsHandler()($result->errors, $config->getErrorFormatter());
                     }
                 });

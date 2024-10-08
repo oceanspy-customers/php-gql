@@ -5,11 +5,15 @@ namespace Vertuoza\Repositories\Settings\UnitTypes;
 use Overblog\DataLoader\DataLoader;
 use Overblog\PromiseAdapter\PromiseAdapterInterface;
 use React\Promise\Promise;
+use Vertuoza\Libs\Logger\ApplicationLogger;
+use Vertuoza\Libs\Logger\LogContext;
 use Vertuoza\Repositories\BaseRepository;
 use Vertuoza\Repositories\Database\QueryBuilder;
+use Vertuoza\Repositories\Interfaces\MutationDataInterface;
 use Vertuoza\Repositories\Settings\UnitTypes\Models\UnitTypeMapper;
 use Vertuoza\Repositories\Settings\UnitTypes\Models\UnitTypeModel;
 use Vertuoza\Repositories\Settings\UnitTypes\UnitTypeMutationData;
+use Ramsey\Uuid\Uuid;
 
 use function React\Async\async;
 
@@ -22,12 +26,12 @@ class UnitTypeRepository extends BaseRepository
     private QueryBuilder $database,
     PromiseAdapterInterface $dataLoaderPromiseAdapter
   ) {
-    parent::__construct($database, UnitTypeModel::getTableName());
+    parent::__construct($database, UnitTypeModel::class);
     $this->dataLoaderPromiseAdapter = $dataLoaderPromiseAdapter;
     $this->getbyIdsDL = [];
   }
 
-  private function fetchByIds(string $tenantId, array $ids)
+  private function fetchByIds(string $tenantId, array $ids) : Promise
   {
     return async(function () use ($tenantId, $ids) {
       $query = $this->getQueryBuilder()
@@ -73,7 +77,7 @@ class UnitTypeRepository extends BaseRepository
     return $this->getDataloader($tenantId)->load($id);
   }
 
-  public function countUnitTypeWithLabel(string $name, string $tenantId, string|int|null $excludeId = null)
+  public function countUnitTypeWithLabel(string $name, string $tenantId, string|int|null $excludeId = null): Promise
   {
     return async(
       fn () => $this->getQueryBuilder()
@@ -83,22 +87,16 @@ class UnitTypeRepository extends BaseRepository
           if (isset($excludeId))
             $query->where('id', '!=', $excludeId);
         })
-        ->where(function ($query) use ($tenantId) {
-          $query->where(UnitTypeModel::getTenantColumnName(), '=', $tenantId)
-            ->orWhereNull(UnitTypeModel::getTenantColumnName());
-        })
+        ->where(UnitTypeModel::getTenantColumnName(), '=', $tenantId)
     )();
   }
 
-  public function findMany(string $tenantId)
+  public function findMany(string $tenantId): Promise
   {
     return async(
       fn () => $this->getQueryBuilder()
         ->whereNull('deleted_at')
-        ->where(function ($query) use ($tenantId) {
-          $query->where(UnitTypeModel::getTenantColumnName(), '=', $tenantId)
-            ->orWhereNull(UnitTypeModel::getTenantColumnName());
-        })
+        ->where(UnitTypeModel::getTenantColumnName(), '=', $tenantId)
         ->get()
         ->map(function ($row) {
           return UnitTypeMapper::modelToEntity(UnitTypeModel::fromStdclass($row));
@@ -106,15 +104,21 @@ class UnitTypeRepository extends BaseRepository
     )();
   }
 
-  public function create(UnitTypeMutationData $data, string $tenantId): int|string
+  public function create(MutationDataInterface $data, string $tenantId): string
   {
-    $newId = $this->getQueryBuilder()->insertGetId(
-      UnitTypeMapper::serializeCreate($data, $tenantId)
-    );
-    return $newId;
+    try {
+      $uuid = Uuid::uuid4()->toString();
+      $serializedData = UnitTypeMapper::serializeCreate($data, $tenantId);
+      $serializedData['id'] = $uuid;
+      $this->getQueryBuilder()->insert($serializedData);
+    } catch (\Exception $e) {
+      ApplicationLogger::getInstance()->error($e, 'CREATE_UNIT_TYPE', new LogContext(null));
+    }
+
+    return $uuid;
   }
 
-  public function update(string $id, UnitTypeMutationData $data)
+  public function update(string $id, MutationDataInterface $data): void
   {
     $this->getQueryBuilder()
       ->where(UnitTypeModel::getPkColumnName(), $id)
@@ -123,7 +127,7 @@ class UnitTypeRepository extends BaseRepository
     $this->clearCache($id);
   }
 
-  private function clearCache(string $id)
+  private function clearCache(string $id): void
   {
     foreach ($this->getbyIdsDL as $dl) {
       if ($dl->key_exists($id)) {

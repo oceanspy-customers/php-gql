@@ -6,15 +6,16 @@ namespace Vertuoza\Repositories\Collaborators\Models;
 
 use DateTime;
 use stdClass;
+use Vertuoza\Repositories\Interfaces\ModelInterface;
 
-class CollaboratorModel
+class CollaboratorModel implements ModelInterface
 {
     public string $id;
     public ?string $name;
     public ?string $first_name;
     public ?DateTime $deleted_at;
     public ?string $tenant_id;
-    public static function fromStdclass(stdClass $data): CollaboratorModel
+    public static function fromStdclass(stdClass $data): ModelInterface
     {
         $model = new CollaboratorModel();
         $model->id = $data->id;

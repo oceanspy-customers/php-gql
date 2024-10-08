@@ -13,14 +13,14 @@ class UserRequestContext
     $this->tenantId = $tenantId;
   }
 
-  public function getUserId(): string|null
+  public function getUserId(): string
   {
-    return $this->userId;
+    return $this->userId ?? '';
   }
 
-  public function getTenantId(): string|null
+  public function getTenantId(): string
   {
-    return $this->tenantId;
+    return $this->tenantId ?? '';
   }
 
   public function isLogged(): bool

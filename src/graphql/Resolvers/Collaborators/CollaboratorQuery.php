@@ -7,6 +7,8 @@ use GraphQL\Type\Definition\NonNull;
 use Vertuoza\Api\Context\VertuozaContext;
 use Vertuoza\Api\Graphql\Context\RequestContext;
 use Vertuoza\Api\Graphql\Types;
+use Vertuoza\Libs\Logger\ApplicationLogger;
+use Vertuoza\Libs\Logger\LogContext;
 
 class CollaboratorQuery
 {
@@ -24,10 +26,7 @@ class CollaboratorQuery
               ->collaboratorById
               ->handle($args['id'], $context);
           } catch (\Throwable $e) {
-            $context->logger->error('Error fetching collaborator by id', [
-              'error' => $e,
-              'id' => $args['id'],
-            ]);
+            ApplicationLogger::getInstance()->error($e, 'COLLABORATOR_BY_ID', new LogContext(null));
             throw $e;
           }
         }
@@ -40,9 +39,7 @@ class CollaboratorQuery
               ->collaboratorsFindMany
               ->handle($context);
           } catch (\Throwable $e) {
-            $context->logger->error('Error fetching collaborators', [
-              'error' => $e,
-            ]);
+            ApplicationLogger::getInstance()->error($e, 'COLLABORATORS', new LogContext(null));
             throw $e;
           }
         }
