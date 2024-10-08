@@ -11,6 +11,9 @@ class UnitTypeCreateUseCase
 {
   private UnitTypeRepository $unitTypeRepository;
   private UserRequestContext $userContext;
+
+  private const MAX_NAME_LENGTH = 255;
+
   public function __construct(
     RepositoriesFactory $repositories,
     UserRequestContext $userContext
@@ -42,7 +45,7 @@ class UnitTypeCreateUseCase
     $string = trim($string);
     $string = strip_tags($string);
 
-    if (strlen($string) > 255) {
+    if (strlen($string) > self::MAX_NAME_LENGTH) {
       $string = substr($string, 0, 255);
     }
 

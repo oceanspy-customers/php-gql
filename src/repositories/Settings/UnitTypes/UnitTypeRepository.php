@@ -33,6 +33,8 @@ class UnitTypeRepository extends BaseRepository
 
   private function fetchByIds(string $tenantId, array $ids) : Promise
   {
+    // TODO: Add pagination
+
     return async(function () use ($tenantId, $ids) {
       $query = $this->getQueryBuilder()
         ->where(function ($query) use ($tenantId) {
@@ -93,6 +95,8 @@ class UnitTypeRepository extends BaseRepository
 
   public function findMany(string $tenantId): Promise
   {
+    // TODO: Add pagination
+
     return async(
       fn () => $this->getQueryBuilder()
         ->whereNull('deleted_at')
