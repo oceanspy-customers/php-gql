@@ -14,12 +14,6 @@ final class Query extends ObjectType
     $config = [
       'fields' => function () {
         return [
-          'hello' => [
-            'type' => Types::string(),
-            'resolve' => function () {
-              return 'world';
-            }
-          ],
           ...UnitTypeQuery::get(),
           ...CollaboratorQuery::get()
         ];

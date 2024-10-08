@@ -10,7 +10,7 @@ use Vertuoza\Libs\Logger\LogContext;
 
 class UnitTypeMutation
 {
-  static function get()
+  static function get(): array
   {
     return [
       'unitTypeCreate' => [

@@ -42,6 +42,8 @@ class UnitTypeCreateUseCase
 
   private function sanitizeString(string $string): string
   {
+    // TODO: decide how much we want to sanitize the input
+
     $string = trim($string);
     $string = strip_tags($string);
 

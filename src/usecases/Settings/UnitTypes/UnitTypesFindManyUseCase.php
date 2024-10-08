@@ -23,7 +23,7 @@ class UnitTypesFindManyUseCase
   }
 
   /**
-   * @param string $id id of the unit type to retrieve
+   * @param int $page page of the collaborator to retrieve
    * @return Promise<UnitTypeEntity>
    */
   public function handle(int $page = 0)

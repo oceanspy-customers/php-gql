@@ -12,7 +12,7 @@ use Vertuoza\Libs\Logger\LogContext;
 
 class CollaboratorQuery
 {
-  static function get()
+  static function get(): array
   {
     return [
       'collaboratorById' => [

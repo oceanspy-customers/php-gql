@@ -22,7 +22,7 @@ class CollaboratorsFindManyUseCase
   }
 
   /**
-   * @param string $id id of the collaborator to retrieve
+   * @param int $page page of the collaborator to retrieve
    * @return Promise<CollaboratorEntity>
    */
   public function handle(int $page = 0)

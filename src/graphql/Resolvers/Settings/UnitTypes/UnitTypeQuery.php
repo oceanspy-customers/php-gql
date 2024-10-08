@@ -13,7 +13,7 @@ use Vertuoza\Libs\Logger\LogContext;
 
 class UnitTypeQuery
 {
-  static function get()
+  static function get(): array
   {
     return [
       'unitTypeById' => [

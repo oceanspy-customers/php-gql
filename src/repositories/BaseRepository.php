@@ -3,8 +3,7 @@
 namespace Vertuoza\Repositories;
 
 use Vertuoza\Repositories\Database\QueryBuilder;
-use function React\Async\async;
-use React\Promise\Promise;
+use Illuminate\Database\Query\Builder;
 
 abstract class BaseRepository
 {
@@ -14,8 +13,8 @@ abstract class BaseRepository
     protected string $modelClass,
   ) { }
 
-  public function getQueryBuilder()
+  public function getQueryBuilder(): Builder
   {
-      return $this->db->getConnection()->table($this->modelClass::getTableName());
+    return $this->db->getConnection()->table($this->modelClass::getTableName());
   }
 }
