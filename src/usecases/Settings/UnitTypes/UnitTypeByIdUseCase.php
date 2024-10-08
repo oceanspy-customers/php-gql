@@ -21,6 +21,7 @@ class UnitTypeByIdUseCase
 
   /**
    * @param string $id id of the unit type to retrieve
+   * @param int $page page of the unit type to retrieve
    * @return Promise<UnitTypeEntity>
    */
   public function handle(string $id): Promise

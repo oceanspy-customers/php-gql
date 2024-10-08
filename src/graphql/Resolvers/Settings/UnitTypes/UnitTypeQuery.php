@@ -19,7 +19,7 @@ class UnitTypeQuery
       'unitTypeById' => [
         'type' => Types::get(UnitType::class),
         'args' => [
-          'id' => new NonNull(Types::string()),
+          'id' => new NonNull(Types::string())
         ],
         'resolve' => static function ($rootValue, $args, RequestContext $context) {
           try {
@@ -34,10 +34,13 @@ class UnitTypeQuery
       ],
       'unitTypes' => [
         'type' => new NonNull(new ListOfType(Types::get(UnitType::class))),
+        'args' => [
+          'page' => Types::int()
+        ],
         'resolve' => static fn ($rootValue, $args, RequestContext $context)
         => $context->useCases->unitType
           ->unitTypesFindMany
-          ->handle($context)
+          ->handle($args['page'] ?? 0, $context)
       ],
     ];
   }

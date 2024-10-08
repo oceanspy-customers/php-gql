@@ -18,7 +18,7 @@ class CollaboratorQuery
       'collaboratorById' => [
         'type' => Types::get(Collaborator::class),
         'args' => [
-          'id' => new NonNull(Types::string()),
+          'id' => new NonNull(Types::string())
         ],
         'resolve' => static function ($rootValue, $args, RequestContext $context) {
           try {
@@ -33,11 +33,14 @@ class CollaboratorQuery
       ],
       'collaborators' => [
         'type' => new NonNull(new ListOfType(Types::get(Collaborator::class))),
+        'args' => [
+          'page' => Types::int()
+        ],
         'resolve' => static function ($rootValue, $args, RequestContext $context) {
           try {
             return $context->useCases->collaborator
               ->collaboratorsFindMany
-              ->handle($context);
+              ->handle($args['page'] ?? 0, $context);
           } catch (\Throwable $e) {
             ApplicationLogger::getInstance()->error($e, 'COLLABORATORS', new LogContext(null));
             throw $e;

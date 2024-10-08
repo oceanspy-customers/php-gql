@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vertuoza\Repositories\Collaborators;
 
+use mysql_xdevapi\Warning;
 use Overblog\DataLoader\DataLoader;
 use Overblog\PromiseAdapter\PromiseAdapterInterface;
 use React\Promise\Promise;
@@ -20,6 +21,8 @@ class CollaboratorRepository extends BaseRepository
   protected array $getbyIdsDL;
   protected PromiseAdapterInterface $dataLoaderPromiseAdapter;
 
+  private const DEFAULT_PAGE_SIZE = 1;
+
   public function __construct(
       private QueryBuilder $database,
       PromiseAdapterInterface $dataLoaderPromiseAdapter
@@ -29,10 +32,8 @@ class CollaboratorRepository extends BaseRepository
       $this->getbyIdsDL = [];
   }
 
-  private function fetchByIds(string $tenantId, array $ids) : Promise
+  private function fetchByIds(string $tenantId, array $ids, int $page = 0) : Promise
   {
-    // TODO: Add pagination
-
     return async(function () use ($tenantId, $ids) {
       $query = $this->getQueryBuilder()
         ->where(function ($query) use ($tenantId) {
@@ -42,7 +43,7 @@ class CollaboratorRepository extends BaseRepository
       $query->whereNull('deleted_at');
       $query->whereIn(CollaboratorModel::getPkColumnName(), $ids);
 
-      $entities = $query->get()->mapWithKeys(function ($row) {
+      $entities = $query->limit(self::DEFAULT_PAGE_SIZE)->offset($page * self::DEFAULT_PAGE_SIZE)->get()->mapWithKeys(function ($row) {
         $entity = CollaboratorMapper::modelToEntity(CollaboratorModel::fromStdclass($row));
         return [$entity->id => $entity];
       });
@@ -54,22 +55,12 @@ class CollaboratorRepository extends BaseRepository
     })();
   }
 
-  public function getByIds(array $ids, string $tenantId): Promise
-  {
-    return $this->getDataloader($tenantId)->loadMany($ids);
-  }
-
-  public function getById(string $id, string $tenantId): Promise
-  {
-    return $this->getDataloader($tenantId)->load($id);
-  }
-
-  protected function getDataloader(string $tenantId): DataLoader
+  protected function getDataloader(string $tenantId, int $page = 0): DataLoader
   {
     if (!isset($this->getbyIdsDL[$tenantId])) {
 
-      $dl = new DataLoader(function (array $ids) use ($tenantId) {
-        return $this->fetchByIds($tenantId, $ids);
+      $dl = new DataLoader(function (array $ids) use ($tenantId, $page) {
+        return $this->fetchByIds($tenantId, $ids, $page);
       }, $this->dataLoaderPromiseAdapter);
       $this->getbyIdsDL[$tenantId] = $dl;
     }
@@ -77,14 +68,24 @@ class CollaboratorRepository extends BaseRepository
     return $this->getbyIdsDL[$tenantId];
   }
 
-  public function findMany(string $tenantId): Promise
+  public function getByIds(array $ids, string $tenantId): Promise
   {
-    // TODO: Add pagination
+    return $this->getDataloader($tenantId, 0)->loadMany($ids);
+  }
 
+  public function getById(string $id, string $tenantId, int $page = 0): Promise
+  {
+    return $this->getDataloader($tenantId, $page)->load($id);
+  }
+
+  public function findMany(string $tenantId, int $page = 0): Promise
+  {
     return async(
       fn () => $this->getQueryBuilder()
         ->whereNull('deleted_at')
         ->where(CollaboratorModel::getTenantColumnName(), '=', $tenantId)
+        ->limit(self::DEFAULT_PAGE_SIZE)
+        ->offset($page * self::DEFAULT_PAGE_SIZE)
         ->get()
         ->map(function ($row) {
           return CollaboratorMapper::modelToEntity(CollaboratorModel::fromStdclass($row));

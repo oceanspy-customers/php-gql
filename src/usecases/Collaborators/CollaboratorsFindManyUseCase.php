@@ -25,8 +25,8 @@ class CollaboratorsFindManyUseCase
    * @param string $id id of the collaborator to retrieve
    * @return Promise<CollaboratorEntity>
    */
-  public function handle()
+  public function handle(int $page = 0)
   {
-    return $this->collaboratorRepository->findMany($this->userContext->getTenantId());
+    return $this->collaboratorRepository->findMany($this->userContext->getTenantId(), $page);
   }
 }
