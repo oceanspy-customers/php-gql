@@ -24,7 +24,7 @@ class CollaboratorQuery
           try {
             return $context->useCases->collaborator
               ->collaboratorById
-              ->handle($args['id'], $context);
+              ->handle($args['id']);
           } catch (\Throwable $e) {
             ApplicationLogger::getInstance()->error($e, 'COLLABORATOR_BY_ID', new LogContext(null));
             throw $e;
@@ -40,7 +40,7 @@ class CollaboratorQuery
           try {
             return $context->useCases->collaborator
               ->collaboratorsFindMany
-              ->handle($args['page'] ?? 0, $context);
+              ->handle($args['page'] ?? 0);
           } catch (\Throwable $e) {
             ApplicationLogger::getInstance()->error($e, 'COLLABORATORS', new LogContext(null));
             throw $e;

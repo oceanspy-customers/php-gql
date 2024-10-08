@@ -25,7 +25,7 @@ class UnitTypeQuery
           try {
             return $context->useCases->unitType
               ->unitTypeById
-              ->handle($args['id'], $context);
+              ->handle($args['id']);
           } catch (\Throwable $e) {
             ApplicationLogger::getInstance()->error($e, 'UNIT_TYPE_BY_ID', new LogContext(null));
             throw $e;

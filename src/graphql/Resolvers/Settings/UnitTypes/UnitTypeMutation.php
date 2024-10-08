@@ -22,7 +22,7 @@ class UnitTypeMutation
           try {
             $newId = $context->useCases->unitType
               ->unitTypeCreate
-              ->handle($args['input']['name'], $context);
+              ->handle($args['input']['name']);
             return ['id' => $newId];
           } catch (\Throwable $e) {
             ApplicationLogger::getInstance()->error($e, 'UNIT_TYPE_CREATE', new LogContext(null));
