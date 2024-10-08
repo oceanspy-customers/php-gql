@@ -16,6 +16,8 @@ type Query {
 you can simply run the solution with docker and docker-compose.
 
 ```bash
+cp .env_php.example .env_php
+cp .env_mysql.example .env_mysql
 docker-compose up
 ```
 

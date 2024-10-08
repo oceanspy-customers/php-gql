@@ -12,7 +12,7 @@ class UnitType extends ObjectType
   {
     parent::__construct([
       'name' => 'UnitType',
-      'description' => 'Unit type"',
+      'description' => 'Unit type',
       'fields' => static fn (): array => [
         'id' => [
           'description' => "Unique identifier of the unit type",

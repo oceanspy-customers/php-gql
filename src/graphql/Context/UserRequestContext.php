@@ -4,21 +4,21 @@ namespace Vertuoza\Api\Graphql\Context;
 
 class UserRequestContext
 {
-  private string|null $userId;
-  private string|null $tenantId;
+  private string $userId;
+  private string $tenantId;
 
-  public function __construct(string|null $userId, string|null $tenantId)
+  public function __construct(string $userId, string $tenantId)
   {
     $this->userId = $userId;
     $this->tenantId = $tenantId;
   }
 
-  public function getUserId(): string|null
+  public function getUserId(): string
   {
     return $this->userId;
   }
 
-  public function getTenantId(): string|null
+  public function getTenantId(): string
   {
     return $this->tenantId;
   }

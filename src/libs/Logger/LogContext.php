@@ -2,24 +2,21 @@
 
 namespace Vertuoza\Libs\Logger;
 
+use Vertuoza\Api\Graphql\Context\UserRequestContext;
+
 class LogContext
 {
-  private string|null $tenantId;
-  private string|null $userId;
-
-  function __construct(string|null $tenantId, string|null $userId)
+  function __construct(private ?UserRequestContext $userContext)
   {
-    $this->tenantId = $tenantId;
-    $this->userId = $userId;
   }
 
-  public function getTenantId(): string|null
+  public function getTenantId(): string
   {
-    return $this->tenantId;
+    return $this->userContext?->getTenantId() ?? '';
   }
 
-  public function getUserId(): string|null
+  public function getUserId(): string
   {
-    return $this->userId;
+    return $this->userContext?->getUserId() ?? '';
   }
 }

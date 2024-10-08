@@ -4,14 +4,15 @@ namespace Vertuoza\Repositories\Settings\UnitTypes\Models;
 
 use DateTime;
 use stdClass;
+use Vertuoza\Repositories\Interfaces\ModelInterface;
 
-class UnitTypeModel
+class UnitTypeModel implements ModelInterface
 {
   public string $id;
   public string $label;
   public ?DateTime $deleted_at;
   public ?string $tenant_id;
-  public static function fromStdclass(stdClass $data): UnitTypeModel
+  public static function fromStdclass(stdClass $data): ModelInterface
   {
     $model = new UnitTypeModel();
     $model->id = $data->id;

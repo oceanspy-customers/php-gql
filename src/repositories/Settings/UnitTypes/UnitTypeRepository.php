@@ -5,40 +5,46 @@ namespace Vertuoza\Repositories\Settings\UnitTypes;
 use Overblog\DataLoader\DataLoader;
 use Overblog\PromiseAdapter\PromiseAdapterInterface;
 use React\Promise\Promise;
+use Vertuoza\Libs\Logger\ApplicationLogger;
+use Vertuoza\Libs\Logger\LogContext;
+use Vertuoza\Repositories\BaseRepository;
 use Vertuoza\Repositories\Database\QueryBuilder;
+use Vertuoza\Repositories\Interfaces\MutationDataInterface;
 use Vertuoza\Repositories\Settings\UnitTypes\Models\UnitTypeMapper;
 use Vertuoza\Repositories\Settings\UnitTypes\Models\UnitTypeModel;
 use Vertuoza\Repositories\Settings\UnitTypes\UnitTypeMutationData;
+use Ramsey\Uuid\Uuid;
 
 use function React\Async\async;
 
-class UnitTypeRepository
+class UnitTypeRepository extends BaseRepository
 {
   protected array $getbyIdsDL;
-  private QueryBuilder $db;
   protected PromiseAdapterInterface $dataLoaderPromiseAdapter;
+
+  private const DEFAULT_PAGE_SIZE = 10;
 
   public function __construct(
     private QueryBuilder $database,
     PromiseAdapterInterface $dataLoaderPromiseAdapter
   ) {
-    $this->db = $database;
+    parent::__construct($database, UnitTypeModel::class);
     $this->dataLoaderPromiseAdapter = $dataLoaderPromiseAdapter;
     $this->getbyIdsDL = [];
   }
 
-  private function fetchByIds(string $tenantId, array $ids)
+  private function fetchByIds(string $tenantId, array $ids, int $page = 0) : Promise
   {
-    return async(function () use ($tenantId, $ids) {
+    return async(function () use ($tenantId, $ids, $page) {
       $query = $this->getQueryBuilder()
         ->where(function ($query) use ($tenantId) {
           $query->where([UnitTypeModel::getTenantColumnName() => $tenantId])
             ->orWhere(UnitTypeModel::getTenantColumnName(), null);
         });
-      $query->whereNull('_deleted_at');
+      $query->whereNull('deleted_at');
       $query->whereIn(UnitTypeModel::getPkColumnName(), $ids);
 
-      $entities = $query->get()->mapWithKeys(function ($row) {
+      $entities = $query->limit(self::DEFAULT_PAGE_SIZE)->offset($page * self::DEFAULT_PAGE_SIZE)->get()->mapWithKeys(function ($row) {
         $entity = UnitTypeMapper::modelToEntity(UnitTypeModel::fromStdclass($row));
         return [$entity->id => $entity];
       });
@@ -50,12 +56,12 @@ class UnitTypeRepository
     })();
   }
 
-  protected function getDataloader(string $tenantId): DataLoader
+  protected function getDataloader(string $tenantId, int $page = 0): DataLoader
   {
     if (!isset($this->getbyIdsDL[$tenantId])) {
 
-      $dl = new DataLoader(function (array $ids) use ($tenantId) {
-        return $this->fetchByIds($tenantId, $ids);
+      $dl = new DataLoader(function (array $ids) use ($tenantId, $page) {
+        return $this->fetchByIds($tenantId, $ids, $page);
       }, $this->dataLoaderPromiseAdapter);
       $this->getbyIdsDL[$tenantId] = $dl;
     }
@@ -63,23 +69,17 @@ class UnitTypeRepository
     return $this->getbyIdsDL[$tenantId];
   }
 
-
-  protected function getQueryBuilder()
+  public function getByIds(array $ids, string $tenantId, int $page = 0): Promise
   {
-    return $this->db->getConnection()->table(UnitTypeModel::getTableName());
-  }
-
-  public function getByIds(array $ids, string $tenantId): Promise
-  {
-    return $this->getDataloader($tenantId)->loadMany($ids);
+    return $this->getDataloader($tenantId, $page)->loadMany($ids);
   }
 
   public function getById(string $id, string $tenantId): Promise
   {
-    return $this->getDataloader($tenantId)->load($id);
+    return $this->getDataloader($tenantId, 0)->load($id);
   }
 
-  public function countUnitTypeWithLabel(string $name, string $tenantId, string|int|null $excludeId = null)
+  public function countUnitTypeWithLabel(string $name, string $tenantId, string|int|null $excludeId = null): Promise
   {
     return async(
       fn () => $this->getQueryBuilder()
@@ -89,22 +89,18 @@ class UnitTypeRepository
           if (isset($excludeId))
             $query->where('id', '!=', $excludeId);
         })
-        ->where(function ($query) use ($tenantId) {
-          $query->where(UnitTypeModel::getTenantColumnName(), '=', $tenantId)
-            ->orWhereNull(UnitTypeModel::getTenantColumnName());
-        })
+        ->where(UnitTypeModel::getTenantColumnName(), '=', $tenantId)
     )();
   }
 
-  public function findMany(string $tenantId)
+  public function findMany(string $tenantId, int $page = 0): Promise
   {
     return async(
       fn () => $this->getQueryBuilder()
         ->whereNull('deleted_at')
-        ->where(function ($query) use ($tenantId) {
-          $query->where(UnitTypeModel::getTenantColumnName(), '=', $tenantId)
-            ->orWhereNull(UnitTypeModel::getTenantColumnName());
-        })
+        ->where(UnitTypeModel::getTenantColumnName(), '=', $tenantId)
+        ->limit(self::DEFAULT_PAGE_SIZE)
+        ->offset($page * self::DEFAULT_PAGE_SIZE)
         ->get()
         ->map(function ($row) {
           return UnitTypeMapper::modelToEntity(UnitTypeModel::fromStdclass($row));
@@ -112,15 +108,21 @@ class UnitTypeRepository
     )();
   }
 
-  public function create(UnitTypeMutationData $data, string $tenantId): int|string
+  public function create(MutationDataInterface $data, string $tenantId): string
   {
-    $newId = $this->getQueryBuilder()->insertGetId(
-      UnitTypeMapper::serializeCreate($data, $tenantId)
-    );
-    return $newId;
+    try {
+      $uuid = Uuid::uuid4()->toString();
+      $serializedData = UnitTypeMapper::serializeCreate($data, $tenantId);
+      $serializedData['id'] = $uuid;
+      $this->getQueryBuilder()->insert($serializedData);
+    } catch (\Exception $e) {
+      ApplicationLogger::getInstance()->error($e, 'CREATE_UNIT_TYPE', new LogContext(null));
+    }
+
+    return $uuid;
   }
 
-  public function update(string $id, UnitTypeMutationData $data)
+  public function update(string $id, MutationDataInterface $data): void
   {
     $this->getQueryBuilder()
       ->where(UnitTypeModel::getPkColumnName(), $id)
@@ -129,7 +131,7 @@ class UnitTypeRepository
     $this->clearCache($id);
   }
 
-  private function clearCache(string $id)
+  private function clearCache(string $id): void
   {
     foreach ($this->getbyIdsDL as $dl) {
       if ($dl->key_exists($id)) {
