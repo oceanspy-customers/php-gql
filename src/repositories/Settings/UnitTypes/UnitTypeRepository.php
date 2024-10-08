@@ -22,7 +22,7 @@ class UnitTypeRepository extends BaseRepository
   protected array $getbyIdsDL;
   protected PromiseAdapterInterface $dataLoaderPromiseAdapter;
 
-  private const DEFAULT_PAGE_SIZE = 1;
+  private const DEFAULT_PAGE_SIZE = 10;
 
   public function __construct(
     private QueryBuilder $database,
